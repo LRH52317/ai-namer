@@ -1,0 +1,12 @@
+{
+  "name": "ai-namer",
+  "version": "1.0.0",
+  "description": "AI 起名平台",
+  "main": "api/name.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}

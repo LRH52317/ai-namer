@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 起名平台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f2ec;
+    color: #232323;
+    min-height: 100vh;
+    padding: 48px 20px 64px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 32px; }
+  h1 { font-size: 30px; letter-spacing: 2px; color: #1f3b34; }
+  h1 span { color: #b06a3b; }
+  .sub { color: #8b8172; font-size: 14px; margin-top: 10px; letter-spacing: 1px; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e6dfd2;
+    border-radius: 14px;
+    padding: 26px;
+    box-shadow: 0 2px 14px rgba(60,50,30,.06);
+  }
+  label { font-size: 14px; color: #46564f; font-weight: 600; display: block; margin-bottom: 10px; }
+  textarea {
+    width: 100%;
+    min-height: 108px;
+    resize: vertical;
+    padding: 14px;
+    font-size: 15px;
+    font-family: inherit;
+    line-height: 1.7;
+    border: 1px solid #ddd5c5;
+    border-radius: 10px;
+    outline: none;
+    background: #fdfcf9;
+    transition: border-color .2s;
+  }
+  textarea:focus { border-color: #7ba37f; background: #fff; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #dfd7c7;
+    background: #faf8f3;
+    color: #6b6355;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .chip:hover { border-color: #b06a3b; color: #b06a3b; }
+
+  .row { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  button.primary {
+    flex: 1;
+    padding: 13px 0;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #fff;
+    background: #2f5d4e;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s;
+  }
+  button.primary:hover { background: #24493d; }
+  button.primary:disabled { background: #a8b8b1; cursor: not-allowed; }
+  button.ghost {
+    padding: 13px 18px;
+    font-size: 14px;
+    color: #6b6355;
+    background: #faf8f3;
+    border: 1px solid #dfd7c7;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .result {
+    margin-top: 26px;
+    background: #fff;
+    border: 1px solid #e6dfd2;
+    border-radius: 14px;
+    padding: 26px;
+    min-height: 220px;
+    box-shadow: 0 2px 14px rgba(60,50,30,.06);
+  }
+  .result-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: #8b8172; margin-bottom: 16px;
+    padding-bottom: 12px; border-bottom: 1px dashed #e6dfd2;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #c9c1b1; display: inline-block; margin-right: 7px; }
+  .dot.on { background: #2f5d4e; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  #output { font-size: 15px; white-space: pre-wrap; word-break: break-word; color: #2b2b2b; }
+  #output .h { color: #1f3b34; font-weight: 700; font-size: 16px; }
+  .tip { color: #b0a692; font-size: 14px; }
+  .err { color: #b34a3b; font-size: 14px; }
+  footer { text-align: center; color: #a99f8d; font-size: 12px; margin-top: 28px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AI <span>起名</span> 平台</h1>
+    <p class="sub">说出你的期待，AI 为你拟三个好名字</p>
+  </header>
+
+  <div class="card">
+    <label for="req">起名需求</label>
+    <textarea id="req" placeholder="例如：男孩取名，姓林，国风典雅，五行缺木，希望寓意平安顺遂"></textarea>
+    <div class="chips">
+      <span class="chip" data-t="男孩取名，姓林，国风典雅，五行缺木，希望寓意平安顺遂">国风男孩·林</span>
+      <span class="chip" data-t="女孩取名，姓苏，现代简约，气质清冷，寓意独立聪慧">现代女孩·苏</span>
+      <span class="chip" data-t="给一家茶饮店取名，主打国潮风格，名字要好念好记">茶饮店名</span>
+      <span class="chip" data-t="给一只布偶猫取名，软萌可爱，两个字最好">猫咪名字</span>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="go">开始起名</button>
+      <button class="ghost" id="copyBtn">复制结果</button>
+    </div>
+  </div>
+
+  <div class="result">
+    <div class="result-head">
+      <span><span class="dot" id="dot"></span><span id="state">等待输入</span></span>
+      <span id="model">doubao-seed-evolving</span>
+    </div>
+    <div id="output"><span class="tip">名字方案会在这里逐字生成……</span></div>
+  </div>
+
+  <footer>Powered by 豆包大模型 · 流式输出 · 记录存入 Supabase</footer>
+</div>
+
+<script>
+const reqEl = document.getElementById('req');
+const goBtn = document.getElementById('go');
+const copyBtn = document.getElementById('copyBtn');
+const output = document.getElementById('output');
+const stateEl = document.getElementById('state');
+const dotEl = document.getElementById('dot');
+const modelEl = document.getElementById('model');
+
+let rawText = '';
+let running = false;
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    reqEl.value = chip.dataset.t;
+  });
+});
+
+function setState(text, on) {
+  stateEl.textContent = text;
+  dotEl.classList.toggle('on', !!on);
+}
+
+function render(text) {
+  // 极简 Markdown 渲染：### 标题加粗高亮，- 列表保持原样
+  output.innerHTML = text
+    .split('\n')
+    .map(line => {
+      const esc = line
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      if (/^#{1,4}\s/.test(line)) {
+        return `<span class="h">${esc.replace(/^#{1,4}\s/, '')}</span>`;
+      }
+      return esc.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    })
+    .join('\n');
+}
+
+async function start() {
+  const requirement = reqEl.value.trim();
+  if (!requirement) {
+    reqEl.focus();
+    output.innerHTML = '<span class="err">请先填写起名需求。</span>';
+    return;
+  }
+  if (running) return;
+
+  running = true;
+  goBtn.disabled = true;
+  goBtn.textContent = '生成中…';
+  rawText = '';
+  output.innerHTML = '';
+  setState('正在生成', true);
+
+  try {
+    const resp = await fetch('/api/name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requirement }),
+    });
+
+    if (!resp.ok) {
+      let msg = `请求失败（${resp.status}）`;
+      try {
+        const j = await resp.json();
+        if (j.error) msg = j.error;
+      } catch (e) {}
+      throw new Error(msg);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data:')) continue;
+        const payload = t.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        let evt;
+        try { evt = JSON.parse(payload); } catch (e) { continue; }
+
+        if (evt.error) throw new Error(evt.error);
+        if (evt.text) {
+          rawText += evt.text;
+          render(rawText);
+        }
+        if (evt.done) {
+          setState('生成完成', false);
+          if (evt.model) modelEl.textContent = evt.model;
+        }
+      }
+    }
+    if (stateEl.textContent === '正在生成') setState('生成完成', false);
+  } catch (err) {
+    setState('出错了', false);
+    output.innerHTML += `\n<span class="err">${err.message}</span>`;
+  } finally {
+    running = false;
+    goBtn.disabled = false;
+    goBtn.textContent = '开始起名';
+  }
+}
+
+goBtn.addEventListener('click', start);
+
+copyBtn.addEventListener('click', async () => {
+  if (!rawText) return;
+  try {
+    await navigator.clipboard.writeText(rawText);
+    copyBtn.textContent = '已复制';
+    setTimeout(() => (copyBtn.textContent = '复制结果'), 1500);
+  } catch (e) {}
+});
+</script>
+</body>
+</html>
